@@ -1,18 +1,22 @@
-# Import pygame to simplify code
+# Import pygame to simplify code and random for asteroid splitting
 import pygame
+import random
 # Imports of other project files
 from constants import *
 from circleshape import CircleShape
 from player import player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
+from shot import Shot
 
 updatable = pygame.sprite.Group()
 drawable = pygame.sprite.Group()
 asteroids = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 player.containers = (updatable, drawable)
 Asteroid.containers = (asteroids, updatable, drawable)
 AsteroidField.containers = (updatable)
+Shot.containers = (bullets, drawable, updatable)
 
 def main():
     pygame.init()
@@ -34,8 +38,17 @@ def main():
                 return
         screen.fill("black") # Color play area
         for objects in drawable:
-            objects.draw(screen) # Render the player object
-        updatable.update(dt) # Updates rotation of player based on pressed keys
+            objects.draw(screen) # Render drawables - player, asteroids, shots
+        updatable.update(dt) # Updates all objects - spawning asteroids, moving player, shots and spawned asteroids
+        for hazard in asteroids:
+            if hazard.collision_check(Player):
+                print("Game Over!")
+                exit()
+        for hazard in asteroids:
+            for shots in bullets:
+                if shots.collision_check(hazard):
+                    shots.kill()
+                    hazard.split()
         pygame.display.flip() # Displays updated state in the play area
         dt = clock.tick(60) / 1000 # Controls framerate and updates the DeltaTime
 
